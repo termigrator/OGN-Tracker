@@ -38,7 +38,7 @@
     After building and uploading the source you can setup your new tracker by accessing through the virtual serial port. 
     Default access is 15200Kb
     
-    
+    At the very least, you should set a tracker address.  If an address is not set, you tracker will generate a different random address 
     
     
     Copyright (C) <2015>  <Mike Roberts>
