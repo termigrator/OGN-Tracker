@@ -44,10 +44,8 @@ uint32_t ClimbAverageTime = 0;
 
 void setup() 
 {
-  uint32_t TempAddress = 0xBADADD;
-
   TrackerConfiguration = new Configuration();
-  TrackerConfiguration->LoadConfiguration(TempAddress);
+  TrackerConfiguration->LoadConfiguration();
   
   Serial.begin(115200);
   ConfigurationReport();
@@ -125,9 +123,8 @@ void FormRFPacket(OGNPacket *Packet)
 
 void ConfigurationReport(void)
 {
-    Serial.println(F("OGN Tracker"));
-    Serial.print(F("1. Device Address \t")); Serial.println(TrackerConfiguration->GetAddress(),HEX);
-    Serial.print(F("2. Address Type \t"));
+    Serial.print(F("Device Address \t")); Serial.println(TrackerConfiguration->GetAddress(),HEX);
+    Serial.print(F("Address Type \t"));
     switch(TrackerConfiguration->GetAddressType())
     {
       case ADDRESS_TYPE_RANDOM  : Serial.println(F("Random")); break;
@@ -137,7 +134,7 @@ void ConfigurationReport(void)
       default : Serial.println();
     }
     
-    Serial.print(F("3. Aircraft Type is\t"));
+    Serial.print(F("Aircraft Type is\t"));
     switch(TrackerConfiguration->GetAircraftType())
     {
       case AIRCRAFT_TYPE_UNKNOWN  : Serial.println(F("Unknown")); break;
@@ -158,11 +155,12 @@ void ConfigurationReport(void)
       default : Serial.println();
     }
     
-    Serial.print(F("4. Serial Baud Rate \t")); Serial.println(TrackerConfiguration->GetSerialBaud());
-    Serial.print(F("5. GPS Type is \t")); Serial.println("NMEA");
-    Serial.print(F("6. GPS Baud Rate \t")); Serial.println(TrackerConfiguration->GetGPSBaud(),DEC);
-    Serial.print(F("7. Listening for data on pin "));  Serial.println(TrackerConfiguration->GetDataInPin(),DEC);
-    Serial.print(F("8. Sending Data to GPS on pin "));  Serial.println(TrackerConfiguration->GetDataOutPin(),DEC);
+    Serial.print(F("Serial Baud Rate \t")); Serial.println(TrackerConfiguration->GetSerialBaud());
+    Serial.print(F("GPS Type is \t")); Serial.println("NMEA");
+    Serial.print(F("GPS Baud Rate \t")); Serial.println(TrackerConfiguration->GetGPSBaud(),DEC);
+    Serial.print(F("Listening for data on pin "));  Serial.println(TrackerConfiguration->GetDataInPin(),DEC);
+    Serial.print(F("Sending Data to GPS on pin "));  Serial.println(TrackerConfiguration->GetDataOutPin(),DEC);
+    Serial.print(F("Privacy is "));  if(TrackerConfiguration->GetPrivate()) Serial.println(F("On")); else Serial.println(F("Off"));
 }
 
 void StatusReport(void)
@@ -225,26 +223,57 @@ void ProcessSerial(void)
 {
   static char CommandBuffer[BUFFERSIZE+1];
   static int8_t BufferUsed = 0;
+  uint32_t Address;
+  uint8_t Type;
   
   while (Serial.available())
   {
     if(BufferUsed < BUFFERSIZE)
     {
-      CommandBuffer[BufferUsed] = Serial.read();
+      CommandBuffer[BufferUsed] = toupper(Serial.read());
       Serial.print(CommandBuffer[BufferUsed]);
       
-      if (CommandBuffer[BufferUsed] == '\r' )
+      if ((CommandBuffer[BufferUsed] == '\r' ) || (CommandBuffer[BufferUsed] == '\n' ))
       {
         Serial.println();
         CommandBuffer[BufferUsed] = '\0';
-        if(strstr(CommandBuffer,"status"))
+        if(strstr(CommandBuffer,"STATUS"))
         {
           StatusReport();
         }
-        else if(strstr(CommandBuffer,"config"))
+        else if(strstr(CommandBuffer,"CONFIG "))
         {
           ConfigurationReport();
         }         
+        else if(strstr(CommandBuffer,"ADDRESS "))
+        {
+          Address = strtoul(&CommandBuffer[7],NULL,16);
+          if(Address)
+            TrackerConfiguration->SetAddress(Address);
+          Serial.print(F("Device Address \t")); Serial.println(TrackerConfiguration->GetAddress(),HEX);
+        }         
+        else if(strstr(CommandBuffer,"WRITE "))
+        {
+          Serial.println(F("Saving Config"));
+          TrackerConfiguration->WriteConfiguration();
+          TrackerConfiguration->LoadConfiguration();
+          Serial.print(F("\r\nSaved Configuration\r\n"));
+          ConfigurationReport();          
+        }         
+        else if(strstr(CommandBuffer,"ADDRESSTYPE "))
+        {
+          Type = (uint8_t)strtol(&CommandBuffer[11],NULL,10);
+          TrackerConfiguration->SetAddressType(Type);
+          ConfigurationReport();
+        }         
+        else if(strstr(CommandBuffer,"AIRCRAFTTYPE "))
+        {
+          Type = (uint8_t)strtol(&CommandBuffer[12],NULL,10);
+          Serial.println(Type,DEC);
+          TrackerConfiguration->SetAircraftType(Type);
+          ConfigurationReport();
+        }         
+
         //else if...
         BufferUsed = 0;
       }

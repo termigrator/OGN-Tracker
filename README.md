@@ -13,21 +13,23 @@
     The original target hardware was the Low Power Lab Moteino USB
     https://lowpowerlab.com/shop/index.php?_route_=moteinousb
     
-    but it sould run on any similar hardware.
+    but it should run on any similar hardware.
     
-    You will also need a TTL GPS module.  There are plenty to choose from on your favorite internet auction site.
+    You will also need a TTL GPS module.  There are plenty to choose from on your favourite internet auction site.
     
     To build.
     Attach the GPS power wires to the Moteino power.
     Attach the GPS Tx and Rx wires to pins 4 & 5 on the Moteino
     
-    The data needs to low out of the GPS into pin ?? and out of the Moteino pin ?? to the GPS.
+    The data needs to flow out of the GPS into pin 4 and out of pin 5 to the GPS.
+	GPS TX ---> Pin 4
+	GPS RX <--- Pin 5
     
     You're done.
     
     Software
     
-    I used the Arduino build enviroment. It is available to download here
+    I used the Arduino build environment. It is available to download here
     www.arduino.cc
     
     In addition you need the following libraries

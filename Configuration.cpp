@@ -24,7 +24,7 @@ Configuration::Configuration(void)
 {
 }
 
-void Configuration::LoadConfiguration(uint32_t TempAddress)
+void Configuration::LoadConfiguration(uint32_t TempAddress )
 {
   NVStore *Store;
   Configuration_Struct temp;
@@ -109,7 +109,11 @@ void Configuration::SetDataOutPin(uint8_t Pin)
 
 void Configuration::WriteConfiguration(void)
 {
-  //NONVolatile_Write((void *)&cs,sizeof(cs));
+  NVStore *Store;
+  
+  Store = new NVStore();
+  Store->Store_Write((void *)&cs, sizeof(cs));
+  delete Store;
 }
 
 uint32_t Configuration::GetSerialBaud(void)

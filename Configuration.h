@@ -60,7 +60,7 @@ class Configuration
 {
   public:
     Configuration();
-    void LoadConfiguration(uint32_t TempAddress);
+    void LoadConfiguration(uint32_t TempAddress = 0xBADADD);
     void WriteConfiguration(void);
     void Report(void);
     void ProcessSerial(void);
