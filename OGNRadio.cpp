@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <SPI.h>
 #include "OGNRadio.h"
 
 #define SCK 13
@@ -71,8 +70,10 @@ void OGNRadio::Initialise(void)
   
   WriteRegister(REG_AUTOMODES, 0);
   
-  WriteRegister(REG_PALEVEL,RF_PALEVEL_PA0_ON | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111);
-
+  WriteRegister(REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111);
+  WriteRegister(REG_OCP, RF_OCP_OFF);
+  WriteRegister(REG_TESTPA1,0x5D);
+  WriteRegister(REG_TESTPA2,0x7C);
 }
 
 
@@ -96,8 +97,8 @@ void OGNRadio::SendPacket(uint8_t *Packet, uint16_t Size, uint16_t freq)
     WriteRegister(REG_FRFLSB, 0x9A);
   }  
 
-  WriteRegister(REG_PREAMBLEMSB, 0x01);
-  WriteRegister(REG_PREAMBLELSB, 0x00);
+  WriteRegister(REG_PREAMBLEMSB, 0x00);
+  WriteRegister(REG_PREAMBLELSB, 0x80);
   
   WriteRegister(REG_IRQFLAGS1,0x00); 
   WriteRegister(REG_IRQFLAGS2,0x00);

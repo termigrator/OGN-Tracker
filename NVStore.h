@@ -15,25 +15,23 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef __LDPC_H__
-#define __LDPC_H__
+#ifndef NVStore_h
+#define NVStore_h
 
 #include <stdint.h>
-#include <stdlib.h>
 
-
-class LDPC
+/////////////////////////////////////////////////////////////////////
+class NVStore
 {
   public:
-    LDPC();
-    void LDPC_Encode(const uint32_t *Data, uint32_t *Parity, const uint32_t ParityGen[48][5]);
-    void LDPC_EncodeBlock(const uint32_t *Data, uint32_t *Parity);
+    NVStore();
+    uint16_t Store_Write(void *Object, uint16_t Size);
+    uint16_t Store_Read(void *Object, uint16_t Size);
     
   protected:
-    uint8_t u8Count1s(uint8_t Byte);
-    uint8_t u32Count1s(uint32_t uWord);
-
+				
+  private:
 };
 
-#endif // of __LDPC_H__
+
+#endif 

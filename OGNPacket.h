@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,10 @@
 
 #include <stdint.h>
 #include <arduino.h>
+
+#include "TEA.h"
+#include "ldpc.h"
+
 
 #define BIT0 0x00000001
 #define BIT1 0x00000002
@@ -90,6 +94,7 @@ class OGNPacket
     //uint8_t DefaultSync[4] = { 0xF5, 0x31, 0xFA, 0xB6 };
     
     void FixEndianess(uint16_t Index);
+	uint8_t u8Count1s(uint8_t Byte);
     
 };
 

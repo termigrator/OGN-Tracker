@@ -15,25 +15,31 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "NVStore.h"
 
-#ifndef __LDPC_H__
-#define __LDPC_H__
+#include <arduino.h>
+#include <eeprom.h>
 
-#include <stdint.h>
-#include <stdlib.h>
-
-
-class LDPC
+NVStore::NVStore(void)
 {
-  public:
-    LDPC();
-    void LDPC_Encode(const uint32_t *Data, uint32_t *Parity, const uint32_t ParityGen[48][5]);
-    void LDPC_EncodeBlock(const uint32_t *Data, uint32_t *Parity);
+}
+
+uint16_t NVStore::Store_Write(void *Object, uint16_t Size)
+{
+  const uint8_t* p = (uint8_t*)Object;
+  uint16_t i;
+  
+  for (i = 0; i < Size; i++)
+    EEPROM.write(i, *p++);
+  return i;
+}
+
+uint16_t NVStore::Store_Read(void *Object, uint16_t Size)
+{
+    uint8_t* p = (uint8_t*)(void*)Object;
+    uint16_t i;
     
-  protected:
-    uint8_t u8Count1s(uint8_t Byte);
-    uint8_t u32Count1s(uint32_t uWord);
-
-};
-
-#endif // of __LDPC_H__
+    for (i = 0; i < Size; i++)
+          *p++ = EEPROM.read(i);
+    return i;
+}

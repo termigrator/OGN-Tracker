@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,6 @@
 */
 
 #include "OGNPacket.h"
-#include "bitcount.h"
-#include "TEA.h"
-#include "ldpc.h"
 
 /* OGN Packet Map
 [00:03] [SSSS SSSS] [SSSS SSSS] [SSSS SSSS] [SSSS SSSS]  Sync Field 4 Bytes 0x0AF3656C
@@ -176,7 +173,7 @@ void OGNPacket::MakeHeading(uint8_t Type, uint8_t Private, int16_t Climb, uint16
   
   *PayloadWord = Heading & 0x3FF;
   
-  lClimb = (lClimb * 0x1FF)<<10;
+  lClimb = (lClimb & 0x1FF)<<10;
   ulType = (ulType & 0x0F)<<20;
   
   *PayloadWord = *PayloadWord | lClimb | ulType;
@@ -346,4 +343,16 @@ void OGNPacket::ManchesterEncodePacket(void)
   }
 }
 
+uint8_t OGNPacket::u8Count1s(uint8_t Byte)
+{
+  uint8_t Count = 0;
+  uint8_t i;
+  
+  for(i=0;i<8;i++)
+  {
+    if( (Byte & 0x01) == 0x01)
+     Count ++;
+  }
+  return Count;
+}
 

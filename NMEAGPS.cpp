@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -18,9 +18,10 @@
 
 #include "NMEAGPS.h"
 
-NMEAGPS::NMEAGPS(uint8_t TxPin, uint8_t RxPin):TinyGPSPlus()
+
+NMEAGPS::NMEAGPS(uint8_t DataInPin, uint8_t DataOutPin):TinyGPSPlus()
 {
-  NMEAGPSStream = new SoftwareSerial(TxPin, RxPin);
+  NMEAGPSStream = new SoftwareSerial(DataInPin, DataOutPin);
   NMEAGPSStream->begin(9800);
   TurnRate = 0;
   ClimbRate = 0;
@@ -34,15 +35,15 @@ void NMEAGPS::ProcessInput(void)
     TinyGPSPlus::encode(NMEAGPSStream->read());
 }
 
-void NMEAGPS::CalculateClimbRate(uint32_t DeltaT)
+void NMEAGPS::CalculateClimbRate(int32_t DeltaT)
 {
   int32_t NewAltitude;
   int32_t DeltaH;
   
-  NewAltitude = TinyGPSPlus::altitude.meters();
-  DeltaH = NewAltitude - LastAltitude;
+  NewAltitude = (int32_t)TinyGPSPlus::altitude.meters();
+  DeltaH = 10*(NewAltitude - LastAltitude);
   LastAltitude = NewAltitude;
-  ClimbRate = (float)(DeltaH)/(float)(DeltaT);
+  ClimbRate = DeltaH/DeltaT;
 }
   
 
@@ -79,7 +80,7 @@ uint32_t NMEAGPS::GetOGNAltitude(void)
   Altitude = TinyGPSPlus::altitude.meters();
   
   if(Altitude <0)
-    return 0;
+    return 1;
   else if (Altitude < 0x1000)
     return Altitude;
   else if (Altitude < 0x3000)
@@ -94,7 +95,8 @@ uint32_t NMEAGPS::GetOGNAltitude(void)
 uint32_t NMEAGPS::GetOGNSpeed(void)
 {
   uint32_t Speed;
-  Speed = 5 * TinyGPSPlus::speed.knots();
+  Speed = TinyGPSPlus::speed.mps()/2;
+  
   
   if(Speed <0)
     return 0;
@@ -139,13 +141,13 @@ uint16_t NMEAGPS::GetOGNHeading(void)
 int16_t NMEAGPS::GetOGNClimbRate(void)        
 {
   int16_t Rate = 0;
-  int8_t UpDown = 1;
+  int16_t UpDown = 0;
   
-  Rate = ClimbRate * 10;
+  Rate = ClimbRate;
   if(Rate < 0)
   {
     Rate = Rate * -1;
-    UpDown = -1;
+    UpDown = 0x100;
   }
   if(Rate < 0x040)
     Rate = Rate;
@@ -157,6 +159,6 @@ int16_t NMEAGPS::GetOGNClimbRate(void)
      Rate = 0x1C0 + (Rate - 0x1C0)/8;
   else
      Rate = 0x0FF;
-  
-  return (uint16_t)(UpDown * Rate);
+     
+  return (uint16_t)(UpDown | Rate);
 }

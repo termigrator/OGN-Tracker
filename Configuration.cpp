@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -17,21 +17,33 @@
 */
 
 #include "Configuration.h"
-
-#include <Arduino.h>
-#include <eeprom.h>
+#include "NVStore.h"
+#include <arduino.h>
 
 Configuration::Configuration(void)
 {
 }
 
-void Configuration::LoadConfiguration(void)
+void Configuration::LoadConfiguration(uint32_t TempAddress)
 {
-  cs.Address = 0x405DA8;
-  cs.Type = TYPE_ICAO;
-  cs.Private = 0;
-
-  //NONVolatile_Read((void *)&cs,sizeof(cs));  
+  NVStore *Store;
+  Configuration_Struct temp;
+  
+  Store = new NVStore();
+  Store->Store_Read((void *)&temp, sizeof(temp));
+  delete Store;
+  
+  if(temp.StoreVersion != 0x0001)
+  {
+    cs.Address = TempAddress;
+    cs.AddressType = ADDRESS_TYPE_OGN ;
+    cs.AircraftType = AIRCRAFT_TYPE_UNKNOWN;
+    cs.Private = 0;
+    cs.SerialBaud = 115200;
+    cs.GPSBaud = 9600;
+    cs.DataInPin = 4;
+    cs.DataOutPin = 5;
+  } 
 }
 
 uint32_t Configuration::GetAddress(void)
@@ -46,12 +58,22 @@ void Configuration::SetAddress(uint32_t Address)
 
 uint8_t Configuration::GetAddressType(void)
 {
-  return cs.Type;
+  return cs.AddressType;
 }
 
 void Configuration::SetAddressType(uint8_t Type)
 {
-  cs.Address = Type;
+  cs.AddressType = Type;
+}
+
+uint8_t Configuration::GetAircraftType(void)
+{
+  return cs.AircraftType;
+}
+
+void Configuration::SetAircraftType(uint8_t Type)
+{
+  cs.AircraftType = Type;
 }
 
 uint8_t Configuration::GetPrivate(void)
@@ -64,38 +86,51 @@ void Configuration::SetPrivate(uint8_t Private)
   cs.Private = Private;
 }
 
+uint8_t Configuration::GetDataInPin(void)
+{
+  return cs.DataInPin;
+}
+
+void Configuration::SetDataInPin(uint8_t Pin)
+{
+  cs.DataInPin = Pin;
+}
+
+uint8_t Configuration::GetDataOutPin(void)
+{
+  return cs.DataOutPin;
+}
+
+void Configuration::SetDataOutPin(uint8_t Pin)
+{
+  cs.DataOutPin = Pin;
+}
+
+
 void Configuration::WriteConfiguration(void)
 {
   //NONVolatile_Write((void *)&cs,sizeof(cs));
 }
 
-void Configuration::Report(void)
+uint32_t Configuration::GetSerialBaud(void)
 {
-    Serial.println("OGN Tracker");
-    Serial.print("Device Address "); Serial.println(cs.Address,HEX);
-    
+  return cs.SerialBaud;
 }
 
-void Configuration::ProcessSerial(void)
+void Configuration::SetSerialBaud(uint32_t SerialBaud)
 {
-} 
-
-
-uint16_t Configuration::NONVolatile_Write(void *Object, uint16_t Size)
-{
-  const byte* p = (byte*)Object;
-  unsigned int i;
-  for (i = 0; i < Size; i++)
-    EEPROM.write(i, *p++);
-  return i;
+  cs.SerialBaud = SerialBaud;
 }
 
-uint16_t Configuration::NONVolatile_Read(void *Object, uint16_t Size)
+uint32_t Configuration::GetGPSBaud(void)
 {
-    byte* p = (byte*)(void*)Object;
-    unsigned int i;
-    for (i = 0; i < Size; i++)
-          *p++ = EEPROM.read(i);
-    return i;
+  return cs.GPSBaud;
 }
+
+void Configuration::SetGPSBaud(uint32_t GPSBaud)
+{
+  cs.GPSBaud = GPSBaud;
+}
+
+
 

@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -21,14 +21,38 @@
 
 #include <stdint.h>
 
-#define TYPE_ICAO 1
+#define ADDRESS_TYPE_RANDOM 0
+#define ADDRESS_TYPE_ICAO 1
+#define ADDRESS_TYPE_FLARM 2
+#define ADDRESS_TYPE_OGN 3
 
+#define AIRCRAFT_TYPE_UNKNOWN 0
+#define AIRCRAFT_TYPE_GLIDER 1
+#define AIRCRAFT_TYPE_TOW_PLANE 2
+#define AIRCRAFT_TYPE_HELICOPTER 3
+#define AIRCRAFT_TYPE_PARACHUTE 4
+#define AIRCRAFT_TYPE_DROP_PLANE 5
+#define AIRCRAFT_TYPE_HANG_GLIDER 6
+#define AIRCRAFT_TYPE_PARA_GLIDER 7
+#define AIRCRAFT_TYPE_POWERED_AIRCRAFT 8 
+#define AIRCRAFT_TYPE_JET_AIRCRAFT 9
+#define AIRCRAFT_TYPE_UFO 10
+#define AIRCRAFT_TYPE_BALLOON 11
+#define AIRCRAFT_TYPE_AIRSHIP 12
+#define AIRCRAFT_TYPE_UAV 13
+#define AIRCRAFT_TYPE_STATIC_OBJECT 15
 
 struct Configuration_Struct
 {
+  uint16_t StoreVersion;
   uint32_t Address;
-  uint8_t Type; 
   uint8_t Private;
+  uint8_t DataInPin;
+  uint8_t DataOutPin;
+  uint32_t SerialBaud;
+  uint32_t GPSBaud;
+  uint8_t AddressType; 
+  uint8_t AircraftType;
 };   
 
 /////////////////////////////////////////////////////////////////////
@@ -36,7 +60,7 @@ class Configuration
 {
   public:
     Configuration();
-    void LoadConfiguration(void);
+    void LoadConfiguration(uint32_t TempAddress);
     void WriteConfiguration(void);
     void Report(void);
     void ProcessSerial(void);
@@ -46,16 +70,29 @@ class Configuration
     
     uint8_t GetAddressType(void);
     void SetAddressType(uint8_t Type);
+    
+    uint8_t GetAircraftType(void);
+    void SetAircraftType(uint8_t Type);
 
     uint8_t GetPrivate(void);
     void SetPrivate(uint8_t Private);
+
+    uint32_t GetSerialBaud(void);
+    void SetSerialBaud(uint32_t SerialBaud);  
+    
+    uint32_t GetGPSBaud(void);
+    void SetGPSBaud(uint32_t GPSBaud);  
+
+    uint8_t GetDataInPin(void);
+    void SetDataInPin(uint8_t Pin);
+      
+    uint8_t GetDataOutPin(void);
+    void SetDataOutPin(uint8_t Pin);
       
   protected:
 				
   private:
     struct Configuration_Struct cs;
-    uint16_t NONVolatile_Read(void *Object, uint16_t Size);
-    uint16_t NONVolatile_Write(void *Object, uint16_t Size);
 };
 
 

@@ -1,5 +1,5 @@
 /* 
- OGN Tracker Client>
+    OGN Tracker Client
     Copyright (C) <2015>  <Mike Roberts>
 
     This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 class NMEAGPS : public TinyGPSPlus
 {
   public:
-    NMEAGPS(uint8_t TxPin, uint8_t RxPin);
+    NMEAGPS(uint8_t DataInPin, uint8_t DataOutPin);
     void ProcessInput(void);
     
     uint32_t GetOGNLatitude();
@@ -39,7 +39,7 @@ class NMEAGPS : public TinyGPSPlus
     uint8_t  GetOGNFixMode();
     uint16_t GetOGNHeading();
     int16_t GetOGNClimbRate();
-    void CalculateClimbRate(uint32_t DeltaT);
+    void CalculateClimbRate(int32_t DeltaT);
       
   protected:
 				
@@ -47,7 +47,7 @@ class NMEAGPS : public TinyGPSPlus
     SoftwareSerial *NMEAGPSStream;
     float TurnRate;
     uint32_t LastHeading;
-    float ClimbRate;
+    uint32_t ClimbRate;
     int32_t LastAltitude;
     uint32_t LastTime;
 };
