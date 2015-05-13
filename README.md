@@ -85,7 +85,7 @@
   Good luck with you tracker. If you need support, please post on the Open Glider Network forum on 
   Google Groups. I will try to spot questions there, or there will be other who can help.
   
-  
+  Mike R
   
   
   
