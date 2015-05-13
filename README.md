@@ -1,5 +1,5 @@
 # OGN-Tracker
-    OGN Tracker Client
+    *OGN Tracker Client
     
     This repository implements the code for an Open Glider Network Tracker client.
     
@@ -8,7 +8,7 @@
     http://wiki.glidernet.org/
     http://wiki.glidernet.org/ogn-tracking-protocol
     
-    Hardware
+    *Hardware
     
     The original target hardware was the Low Power Lab Moteino USB
     https://lowpowerlab.com/shop/index.php?_route_=moteinousb
@@ -18,7 +18,7 @@
     You will also need a TTL GPS module.  There are plenty to choose from on your 
     favourite internet auction site.
     
-    To build.
+    *To build.
     Attach the GPS power wires to the Moteino power.
     Attach the GPS Tx and Rx wires to pins 4 & 5 on the Moteino
     
@@ -28,7 +28,7 @@
     
     You're done.
     
-    Software
+    *Software
     
     I used the Arduino build environment. It is available to download here
     www.arduino.cc
@@ -37,7 +37,8 @@
     TinyGPSPlus - This is installable through the library manager
     RFM69 - Again available through download manager.
     
-    Setup / Configuration
+    *Setup / Configuration
+    
     After building and uploading the source you can setup your new tracker by 
     accessing through the virtual serial port. 
     Default access is 115200,8,N,1
@@ -49,19 +50,19 @@
     interface is very very basic--No backspace or cursor keys, but you only need to do this once.
     Remember to save when you are happy.
    
-    Status : Prints out the GPS status
+    [ ]Status : Prints out the GPS status
    
-    Config : Prints out the current configuration
+    [ ]Config : Prints out the current configuration
    
-    Address XXXXXX : Sets the tracker address to XXXXXX where XXXXXX is a 6 character hex address.
+    [ ]Address XXXXXX : Sets the tracker address to XXXXXX where XXXXXX is a 6 character hex address.
    
-    Addresstype X : Sets the address type where address types are:
-    	0 : Random
-    	1 : ICAO
-    	2 : FLARM
-    	3 : OGN
+    [ ]Addresstype X : Sets the address type where address types are:
+    	0 - Random
+    	1 - ICAO
+    	2 - FLARM
+    	3 - OGN
    
-   AircraftType XX : Sets the aircraft type, there XX types are:
+   [ ]AircraftType XX : Sets the aircraft type, there XX types are:
    	0  : Unknown
    	1  : Glider
    	2  : Tow Plane
