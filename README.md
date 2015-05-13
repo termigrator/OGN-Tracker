@@ -1,7 +1,7 @@
 # OGN-Tracker
     OGN Tracker Client
     
-    This repository implements a Open Glider Network Tracker client.
+    This repository implements the code for an Open Glider Network Tracker client.
     
     Details of the tracking network and tracking client are provided here
     
@@ -40,12 +40,55 @@
     Setup / Configuration
     After building and uploading the source you can setup your new tracker by 
     accessing through the virtual serial port. 
-    Default access is 15200Kb
+    Default access is 115200,8,N,1
     
     At the very least, you should set a tracker address.  
     If an address is not set, you tracker will use a default address
-    
-    
+  
+    The commands on the interface are as follows. They are not case sensitive, but (for now) the 
+    interface is very very basic--No backspace or cursor keys, but you only need to do this once.
+    Remember to save when you are happy.
+   
+    Status : Prints out the GPS status
+   
+    Config : Prints out the current configuration
+   
+    Address XXXXXX : Sets the tracker address to XXXXXX where XXXXXX is a 6 character hex address.
+   
+    Addresstype X : Sets the address type where address types are:
+    	0 : Random
+    	1 : ICAO
+    	2 : FLARM
+    	3 : OGN
+   
+   AircraftType XX : Sets the aircraft type, there XX types are:
+   	0  : Unknown
+   	1  : Glider
+   	2  : Tow Plane
+   	3  : Helicopter
+   	4  : Parachute
+   	5  : Drop Plane
+   	6  : Hang Glider
+   	7  : Paraglider
+   	8  : Powered Aircraft
+   	9  : Jet
+   	10 : UFO
+   	11 : Balloon
+   	12 : Airship
+   	13 : UAV
+   	14 : Static Object
+   	
+  Save : Once you have fiddled with the settings, Save will store the configuration in the EEPROM. 
+  If you don't save the tracker will revert next time you switch on.
+  
+  Support.
+  Good luck with you tracker. If you need support, please post on the Open Glider Network forum on 
+  Google Groups. I will try to spot questions there, or there will be other who can help.
+  
+  
+  
+  
+  
     
     
     Copyright (C) <2015>  <Mike Roberts>
