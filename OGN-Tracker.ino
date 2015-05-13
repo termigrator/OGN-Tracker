@@ -161,10 +161,12 @@ void ConfigurationReport(void)
     Serial.print(F("Listening for data on pin "));  Serial.println(TrackerConfiguration->GetDataInPin(),DEC);
     Serial.print(F("Sending Data to GPS on pin "));  Serial.println(TrackerConfiguration->GetDataOutPin(),DEC);
     Serial.print(F("Privacy is "));  if(TrackerConfiguration->GetPrivate()) Serial.println(F("On")); else Serial.println(F("Off"));
+    Serial.println();
 }
 
 void StatusReport(void)
 {
+  Serial.print(F("Tracking "));Serial.print(GPS->satellites.value()); Serial.println(F(" satellites"));
   if (GPS->location.isValid())
   {
     Serial.print(GPS->location.lat(), 6);
@@ -241,7 +243,7 @@ void ProcessSerial(void)
         {
           StatusReport();
         }
-        else if(strstr(CommandBuffer,"CONFIG "))
+        else if(strstr(CommandBuffer,"CONFIG"))
         {
           ConfigurationReport();
         }         
@@ -250,9 +252,9 @@ void ProcessSerial(void)
           Address = strtoul(&CommandBuffer[7],NULL,16);
           if(Address)
             TrackerConfiguration->SetAddress(Address);
-          Serial.print(F("Device Address \t")); Serial.println(TrackerConfiguration->GetAddress(),HEX);
+          ConfigurationReport();
         }         
-        else if(strstr(CommandBuffer,"WRITE "))
+        else if(strstr(CommandBuffer,"SAVE"))
         {
           Serial.println(F("Saving Config"));
           TrackerConfiguration->WriteConfiguration();

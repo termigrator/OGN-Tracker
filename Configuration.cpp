@@ -20,6 +20,8 @@
 #include "NVStore.h"
 #include <arduino.h>
 
+#define STOREVERSION 0x0002
+
 Configuration::Configuration(void)
 {
 }
@@ -33,8 +35,9 @@ void Configuration::LoadConfiguration(uint32_t TempAddress )
   Store->Store_Read((void *)&temp, sizeof(temp));
   delete Store;
   
-  if(temp.StoreVersion != 0x0001)
+  if(temp.StoreVersion != STOREVERSION)
   {
+    Serial.println("EE OK");
     cs.Address = TempAddress;
     cs.AddressType = ADDRESS_TYPE_OGN ;
     cs.AircraftType = AIRCRAFT_TYPE_UNKNOWN;
@@ -44,6 +47,10 @@ void Configuration::LoadConfiguration(uint32_t TempAddress )
     cs.DataInPin = 4;
     cs.DataOutPin = 5;
   } 
+  else
+  {
+      memcpy(&cs,&temp,sizeof(cs));
+  }
 }
 
 uint32_t Configuration::GetAddress(void)
@@ -110,7 +117,8 @@ void Configuration::SetDataOutPin(uint8_t Pin)
 void Configuration::WriteConfiguration(void)
 {
   NVStore *Store;
-  
+
+  cs.StoreVersion = STOREVERSION; 
   Store = new NVStore();
   Store->Store_Write((void *)&cs, sizeof(cs));
   delete Store;
