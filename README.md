@@ -15,7 +15,8 @@
     
     but it should run on any similar hardware.
     
-    You will also need a TTL GPS module.  There are plenty to choose from on your favourite internet auction site.
+    You will also need a TTL GPS module.  There are plenty to choose from on your 
+    favourite internet auction site.
     
     To build.
     Attach the GPS power wires to the Moteino power.
@@ -37,10 +38,14 @@
     RFM69 - Again available through download manager.
     
     Setup / Configuration
-    After building and uploading the source you can setup your new tracker by accessing through the virtual serial port. 
+    After building and uploading the source you can setup your new tracker by 
+    accessing through the virtual serial port. 
     Default access is 15200Kb
     
-    At the very least, you should set a tracker address.  If an address is not set, you tracker will generate a different random address 
+    At the very least, you should set a tracker address.  
+    If an address is not set, you tracker will use a default address
+    
+    
     
     
     Copyright (C) <2015>  <Mike Roberts>
