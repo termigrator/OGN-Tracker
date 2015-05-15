@@ -12,7 +12,8 @@ Hardware
 The original target hardware was the Low Power Lab Moteino USB
 https://lowpowerlab.com/shop/index.php?_route_=moteinousb
 
-but it should run on any similar hardware.
+the version with the RRM69HW radio and no additional FLASH was used but 
+the code should run on any similar hardware.
 
 You will also need a TTL GPS module. There are plenty to choose from on your 
 favourite internet auction site.
