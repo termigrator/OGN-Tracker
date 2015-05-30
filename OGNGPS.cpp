@@ -15,30 +15,49 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+ 
+#include "OGNGPS.h"
 
-#include "NMEAGPS.h"
 
-
-NMEAGPS::NMEAGPS(uint8_t DataInPin, uint8_t DataOutPin):TinyGPSPlus()
+OGNGPS::OGNGPS(uint8_t DataInPin, uint8_t DataOutPin):TinyGPSPlus()
 {
-  NMEAGPSStream = new SoftwareSerial(DataInPin, DataOutPin);
-  NMEAGPSStream->begin(9800);
+  OGNGPSStream = new SoftwareSerial(DataInPin, DataOutPin);
+  OGNGPSStream->begin(9800);
   TurnRate = 0;
   ClimbRate = 0;
-  LastTime = 0;
   LastAltitude = 0;
+  LastHeading = 0;
 }
 
-void NMEAGPS::ProcessInput(void)
+uint8_t OGNGPS::ProcessInput(void)
 {
- while (NMEAGPSStream->available() > 0)
-    TinyGPSPlus::encode(NMEAGPSStream->read());
+  uint8_t c;
+  
+  if(OGNGPSStream->available() > 0)
+  {
+    c = OGNGPSStream->read();
+    TinyGPSPlus::encode(c);
+    return c;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
-void NMEAGPS::CalculateClimbRate(int32_t DeltaT)
+void OGNGPS::CalculateClimbRate(int32_t TimeNow)
 {
+  static uint32_t LastTime = 0;
   int32_t NewAltitude;
-  int32_t DeltaH;
+  int32_t DeltaH, DeltaT;
+  
+  if(( TimeNow - LastTime) < 30000)
+  {
+     return;
+  }
+ 
+  DeltaT = TimeNow - LastTime;
+  LastTime = TimeNow; 
   
   NewAltitude = (int32_t)TinyGPSPlus::altitude.meters();
   DeltaH = 10*(NewAltitude - LastAltitude);
@@ -46,8 +65,28 @@ void NMEAGPS::CalculateClimbRate(int32_t DeltaT)
   ClimbRate = DeltaH/DeltaT;
 }
   
+void OGNGPS::CalculateTurnRate(int32_t TimeNow)
+{
+  static uint32_t LastTime = 0;
+  int32_t NewHeading;
+  int32_t DeltaH, DeltaT;
+ 
+  if(( TimeNow - LastTime) < 1000)
+  {
+     return;
+  }
+ 
+  DeltaT = TimeNow - LastTime;
+  LastTime = TimeNow; 
+  
+  NewHeading = (int32_t)TinyGPSPlus::course.deg() * 2.84444;
+  DeltaH = 10*(NewHeading - LastHeading);
+  LastHeading = NewHeading;
+  TurnRate = DeltaH/DeltaT;
+}
 
-uint32_t NMEAGPS::GetOGNLatitude(void)
+
+uint32_t OGNGPS::GetOGNLatitude(void)
 {
   uint32_t Latitude, Fraction;
   
@@ -61,7 +100,7 @@ uint32_t NMEAGPS::GetOGNLatitude(void)
   return Latitude;
 }
 
-uint32_t NMEAGPS::GetOGNLongitude(void)
+uint32_t OGNGPS::GetOGNLongitude(void)
 {
   uint32_t Longitude, Fraction;
   Longitude = TinyGPSPlus::location.rawLng().deg;
@@ -74,7 +113,7 @@ uint32_t NMEAGPS::GetOGNLongitude(void)
   return Longitude;
 }
 
-uint32_t NMEAGPS::GetOGNAltitude(void)
+uint32_t OGNGPS::GetOGNAltitude(void)
 {
   uint32_t Altitude;
   Altitude = TinyGPSPlus::altitude.meters();
@@ -92,10 +131,10 @@ uint32_t NMEAGPS::GetOGNAltitude(void)
   else return 0x3FFF;  
 }
 
-uint32_t NMEAGPS::GetOGNSpeed(void)
+uint32_t OGNGPS::GetOGNSpeed(void)
 {
   uint32_t Speed;
-  Speed = TinyGPSPlus::speed.mps()/2;
+  Speed = TinyGPSPlus::speed.mps()*0.61;
   
   
   if(Speed <0)
@@ -112,12 +151,12 @@ uint32_t NMEAGPS::GetOGNSpeed(void)
     return 0x3FF;
 }
 
-uint32_t NMEAGPS::GetOGNDOP(void)
+uint32_t OGNGPS::GetOGNDOP(void)
 {
    return(TinyGPSPlus::hdop.value());
 }
 
-uint8_t NMEAGPS::GetOGNFixQuality(void)
+uint8_t OGNGPS::GetOGNFixQuality(void)
 {
   if(TinyGPSPlus::location.isValid())
    return 1;
@@ -125,7 +164,7 @@ uint8_t NMEAGPS::GetOGNFixQuality(void)
     return 0;
 }
   
-uint8_t NMEAGPS::GetOGNFixMode(void)
+uint8_t OGNGPS::GetOGNFixMode(void)
 {
   if(TinyGPSPlus::satellites.value()>4)
    return 1;
@@ -133,12 +172,17 @@ uint8_t NMEAGPS::GetOGNFixMode(void)
     return 0;
 }
     
-uint16_t NMEAGPS::GetOGNHeading(void)
+uint16_t OGNGPS::GetOGNHeading(void)
 {
-  return TinyGPSPlus::course.deg() * 10;
+  return TinyGPSPlus::course.deg() * 2.84444;
+}
+ 
+int16_t OGNGPS::GetOGNTurnRate(void)
+{
+  return TurnRate;
 }
     
-int16_t NMEAGPS::GetOGNClimbRate(void)        
+int16_t OGNGPS::GetOGNClimbRate(void)        
 {
   int16_t Rate = 0;
   int16_t UpDown = 0;

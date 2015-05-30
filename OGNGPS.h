@@ -15,20 +15,20 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef NMEAGPS_h
-#define NMEAGPS_h
+ 
+#ifndef OGNGPS_h
+#define OGNGPS_h
 
 #include <stdint.h>
 
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
-class NMEAGPS : public TinyGPSPlus
+class OGNGPS : public TinyGPSPlus
 {
   public:
-    NMEAGPS(uint8_t DataInPin, uint8_t DataOutPin);
-    void ProcessInput(void);
+    OGNGPS(uint8_t DataInPin, uint8_t DataOutPin);
+    uint8_t ProcessInput(void);
     
     uint32_t GetOGNLatitude();
     uint32_t GetOGNLongitude();
@@ -39,17 +39,20 @@ class NMEAGPS : public TinyGPSPlus
     uint8_t  GetOGNFixMode();
     uint16_t GetOGNHeading();
     int16_t GetOGNClimbRate();
+    int16_t GetOGNTurnRate();
     void CalculateClimbRate(int32_t DeltaT);
+    void CalculateTurnRate(int32_t DeltaT);
       
   protected:
 				
   private:
-    SoftwareSerial *NMEAGPSStream;
-    float TurnRate;
-    uint32_t LastHeading;
-    uint32_t ClimbRate;
+    SoftwareSerial *OGNGPSStream;
+    
+    int16_t LastHeading;
     int32_t LastAltitude;
-    uint32_t LastTime;
+    uint32_t TurnRate;
+    uint32_t ClimbRate;
+    
 };
 
 

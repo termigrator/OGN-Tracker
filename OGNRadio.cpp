@@ -23,7 +23,7 @@
 #define MISO 12
 #define MOSI 11
 
-SPISettings SPISet(SPI_CLOCK_DIV128, MSBFIRST, SPI_MODE0);
+SPISettings SPISet(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0);
 
 OGNRadio::OGNRadio(void)
 {
@@ -38,7 +38,7 @@ OGNRadio::OGNRadio(void)
   SPI.setBitOrder(MSBFIRST);  
 }
 
-void OGNRadio::Initialise(void)
+void OGNRadio::Initialise(uint8_t Power)
 {
   WriteRegister(REG_OPMODE, RF_DATAMODUL_MODULATIONTYPE_FSK  | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY);
   WriteRegister(REG_DATAMODUL, RF_DATAMODUL_DATAMODE_PACKET  | RF_DATAMODUL_MODULATIONSHAPING_10 | RF_DATAMODUL_MODULATIONTYPE_FSK );
@@ -69,18 +69,14 @@ void OGNRadio::Initialise(void)
   WriteRegister(REG_PACKETCONFIG2, RF_PACKET2_RXRESTARTDELAY_1BIT | RF_PACKET2_AUTORXRESTART_ON  | RF_PACKET2_AES_OFF);
   
   WriteRegister(REG_AUTOMODES, 0);
-  
-  WriteRegister(REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | RF_PALEVEL_OUTPUTPOWER_11111);
-  WriteRegister(REG_OCP, RF_OCP_OFF);
-  WriteRegister(REG_TESTPA1,0x5D);
-  WriteRegister(REG_TESTPA2,0x7C);
+
+  SetTxPower(Power);
 }
 
 
 void OGNRadio::SendPacket(uint8_t *Packet, uint16_t Size, uint16_t freq)
 {
   uint8_t i;
-  uint32_t s,e;
   
   if(freq == F8682)
   {
@@ -107,16 +103,36 @@ void OGNRadio::SendPacket(uint8_t *Packet, uint16_t Size, uint16_t freq)
     WriteRegister(REG_FIFO,Packet[i]);
   }
   
-  s=micros();
   WriteRegister(REG_OPMODE , RF_DATAMODUL_MODULATIONTYPE_FSK  | RF_OPMODE_LISTEN_OFF | RF_OPMODE_TRANSMITTER);
   
   do {} while( (ReadRegister(REG_IRQFLAGS2) & RF_IRQFLAGS2_PACKETSENT ) != RF_IRQFLAGS2_PACKETSENT);
 
-  e=micros();
   WriteRegister(REG_OPMODE, RF_DATAMODUL_MODULATIONTYPE_FSK  | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY);
 
 }
 
+void OGNRadio::SetTxPower(uint8_t Power)
+{
+  if(Power <4 ) Power = 4;
+  if(Power >20) Power = 20;
+  Power += 11;
+  WriteRegister(REG_PALEVEL, RF_PALEVEL_PA0_OFF | RF_PALEVEL_PA1_ON | RF_PALEVEL_PA2_ON | (Power & 0x1F));
+  WriteRegister(REG_OCP, RF_OCP_OFF);
+  WriteRegister(REG_TESTPA1,0x5D);
+  WriteRegister(REG_TESTPA2,0x7C);
+}
+
+void OGNRadio::StartRecieve(void)
+{
+}
+
+void OGNRadio::EndRecieve(void)
+{
+}
+
+void OGNRadio::CheckRecieve(void)
+{
+}
 
 void OGNRadio::WriteRegister(uint8_t Register, uint8_t Data)
 {

@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+ 
 #include <SPI.h>
 #include <RFM69registers.h>
 #include <SoftwareSerial.h>
@@ -24,23 +24,27 @@
 #include <stdint.h>
 
 
-#include "NMEAGPS.h"
+#include "OGNGPS.h"
 #include "OGNRadio.h"
 #include "Configuration.h"
 #include "OGNPacket.h"
 
 void FormRFPacket(OGNPacket *Packet);
+void ProcessGPS(OGNGPS *GPS);
 
-NMEAGPS *GPS;
+
+OGNGPS *GPS;
 OGNRadio *Radio;
 Configuration *TrackerConfiguration;
-
+uint8_t RecieveActive = false;
 
 uint32_t ReportTime = 0;
 #define REPORTDELAY 1000
 
 uint32_t ClimbAverageTime = 0;
 #define CLIMBAVERAGE 30000
+
+#define NMEAOUTDELAY 60000
 
 void setup() 
 {
@@ -50,41 +54,56 @@ void setup()
   Serial.begin(115200);
   ConfigurationReport();
 
-  GPS = new NMEAGPS(TrackerConfiguration->GetDataInPin(),TrackerConfiguration->GetDataOutPin());
+  GPS = new OGNGPS(TrackerConfiguration->GetDataInPin(),TrackerConfiguration->GetDataOutPin());
   Radio = new OGNRadio(); 
-  Radio->Initialise();
+  Radio->Initialise(TrackerConfiguration->GetTxPower());
 }
 
 void loop() 
 {
   OGNPacket *ReportPacket;
+  uint32_t TimeNow;
   
-  GPS->ProcessInput();
+  ProcessGPS(GPS);
+
+  TimeNow = millis();
   
-  if( (millis() - ReportTime) > REPORTDELAY)
+  if( (TimeNow - ReportTime) > REPORTDELAY)
   {
     if(GPS->location.isValid())
     {
-      if( (millis() - ClimbAverageTime) > CLIMBAVERAGE)
+      ReportTime = TimeNow;
+      
+      if(RecieveActive)
       {
-        GPS->CalculateClimbRate(CLIMBAVERAGE/1000);
-        ClimbAverageTime = millis();
+        Radio->EndRecieve();
+        RecieveActive = false;
       }
-
+      
+      GPS->CalculateTurnRate(TimeNow);
+      GPS->CalculateClimbRate(TimeNow);
+ 
       ReportPacket = new OGNPacket;
       FormRFPacket(ReportPacket);
         
-      Radio->SendPacket(ReportPacket->ManchesterPacket,OGNPACKETSIZE*2,F8682);
+      //Radio->SendPacket(ReportPacket->ManchesterPacket,OGNPACKETSIZE*2,F8682);
       Radio->SendPacket(ReportPacket->ManchesterPacket,OGNPACKETSIZE*2,F8684);
- 
+      
       delete ReportPacket;
-      ReportTime = millis(); 
+      
+      Radio->StartRecieve(); RecieveActive = true;       
     }
   }
+  
 
   if(Serial.available())
   {
     ProcessSerial();
+  }
+  
+  if(RecieveActive)
+  {
+    Radio->CheckRecieve();
   }
 }
 
@@ -98,7 +117,7 @@ void FormRFPacket(OGNPacket *Packet)
     
   Packet->MakeLongitude(GPS->GetOGNFixMode(), 0, GPS->GetOGNDOP(), GPS->GetOGNLongitude());
   
-  Packet->MakeAltitude(0, GPS->GetOGNSpeed(), GPS->GetOGNAltitude());
+  Packet->MakeAltitude(GPS->GetOGNTurnRate(), GPS->GetOGNSpeed(), GPS->GetOGNAltitude());
   
   Packet->MakeHeading(TrackerConfiguration->GetAircraftType(), TrackerConfiguration->GetPrivate(), GPS->GetOGNClimbRate(), GPS->GetOGNHeading());
 
@@ -109,8 +128,45 @@ void FormRFPacket(OGNPacket *Packet)
   Packet->ManchesterEncodePacket();
 }
 
+#define NMEABUFFERSIZE 80
 
-
+void ProcessGPS(OGNGPS *GPS)
+{
+  static uint8_t NMEABuffer[NMEABUFFERSIZE+1];
+  static uint8_t BufferUsed = 0;
+  uint8_t c;
+  
+  while( (c = GPS->ProcessInput()) != 0)
+  {
+    if(TrackerConfiguration->GetNMEAOut())
+    {
+      if(c == '$')
+      {
+        NMEABuffer[0] = c;
+        BufferUsed = 1;
+      }
+      else if ( c == '\r' )
+      {
+         NMEABuffer[BufferUsed] = '\0';
+         BufferUsed = 0;
+         if( millis() > (TrackerConfiguration->GetNMEADelay()*1000) )
+           Serial.println((char *)NMEABuffer);
+      }
+      else
+      {
+        if(BufferUsed < NMEABUFFERSIZE)
+        {
+          NMEABuffer[BufferUsed] = c;
+          BufferUsed++;
+        }
+        else
+        {
+          BufferUsed = 0;
+        }
+      }
+    }  
+  }
+}
 
 
 
@@ -161,100 +217,61 @@ void ConfigurationReport(void)
     Serial.print(F("Listening for data on pin "));  Serial.println(TrackerConfiguration->GetDataInPin(),DEC);
     Serial.print(F("Sending Data to GPS on pin "));  Serial.println(TrackerConfiguration->GetDataOutPin(),DEC);
     Serial.print(F("Privacy is "));  if(TrackerConfiguration->GetPrivate()) Serial.println(F("On")); else Serial.println(F("Off"));
+    Serial.print(F("OutputPower ")); Serial.print(TrackerConfiguration->GetTxPower()); Serial.println(F(" dBm"));
+    Serial.print(F("NMEA Out is "));  
+    if(TrackerConfiguration->GetNMEAOut())
+    {
+      Serial.print(F("On. Delay is "));Serial.println(TrackerConfiguration->GetNMEADelay());
+    } 
+    else 
+    {
+      Serial.println(F("Off"));
+    }
+    
     Serial.println();
 }
 
 void StatusReport(void)
-{
+{ 
   Serial.print(F("Tracking "));Serial.print(GPS->satellites.value()); Serial.println(F(" satellites"));
-  if (GPS->location.isValid())
-  {
-    Serial.print(GPS->location.lat(), 6);
-    Serial.print(F(","));
-    Serial.print(GPS->location.lng(), 6);
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
-  
-  Serial.print(F(" "));
-  if(GPS->altitude.isValid());
-  {
-    Serial.print(GPS->altitude.meters());
-    Serial.print(F(" "));
-  }
-  
-  if (GPS->date.isValid())
-  {
-    Serial.print(GPS->date.month());
-    Serial.print(F("/"));
-    Serial.print(GPS->date.day());
-    Serial.print(F("/"));
-    Serial.print(GPS->date.year());
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
 
-  Serial.print(F(" "));
-  if (GPS->time.isValid())
-  {
-    if (GPS->time.hour() < 10) Serial.print(F("0"));
-    Serial.print(GPS->time.hour());
-    Serial.print(F(":"));
-    if (GPS->time.minute() < 10) Serial.print(F("0"));
-    Serial.print(GPS->time.minute());
-    Serial.print(F(":"));
-    if (GPS->time.second() < 10) Serial.print(F("0"));
-    Serial.print(GPS->time.second());
-    Serial.print(F("."));
-    if (GPS->time.centisecond() < 10) Serial.print(F("0"));
-    Serial.print(GPS->time.centisecond());
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
-  Serial.println();
 }
 
-#define BUFFERSIZE 40
+#define MAXLENGTH 40
 void ProcessSerial(void)
 {
-  static char CommandBuffer[BUFFERSIZE+1];
-  static int8_t BufferUsed = 0;
+  static String Buffer = "";
+  int8_t Byte;
   uint32_t Address;
   uint8_t Type;
+  uint8_t Power;
   
   while (Serial.available())
   {
-    if(BufferUsed < BUFFERSIZE)
+    if(Buffer.length() < MAXLENGTH)
     {
-      CommandBuffer[BufferUsed] = toupper(Serial.read());
-      Serial.print(CommandBuffer[BufferUsed]);
+      Byte = toupper(Serial.read());
       
-      if ((CommandBuffer[BufferUsed] == '\r' ) || (CommandBuffer[BufferUsed] == '\n' ))
+      if ((Byte == '\r' ) || (Byte == '\n' ))
       {
-        Serial.println();
-        CommandBuffer[BufferUsed] = '\0';
-        if(strstr(CommandBuffer,"STATUS"))
+        Serial.println(Buffer);
+        if(Buffer.startsWith("STATUS"))
         {
           StatusReport();
         }
-        else if(strstr(CommandBuffer,"CONFIG"))
+        else if(Buffer.startsWith("CONFIG"))
         {
           ConfigurationReport();
         }         
-        else if(strstr(CommandBuffer,"ADDRESS "))
+        else if(Buffer.startsWith("ADDRESS "))
         {
-          Address = strtoul(&CommandBuffer[7],NULL,16);
+          Buffer.remove(0,8);
+          Address = strtol(Buffer.c_str(),NULL,16);
           if(Address)
             TrackerConfiguration->SetAddress(Address);
           ConfigurationReport();
         }         
-        else if(strstr(CommandBuffer,"SAVE"))
+        else if(Buffer.startsWith("SAVE"))
         {
           Serial.println(F("Saving Config"));
           TrackerConfiguration->WriteConfiguration();
@@ -262,33 +279,41 @@ void ProcessSerial(void)
           Serial.print(F("\r\nSaved Configuration\r\n"));
           ConfigurationReport();          
         }         
-        else if(strstr(CommandBuffer,"ADDRESSTYPE "))
+        else if(Buffer.startsWith("ADDRESSTYPE "))
         {
-          Type = (uint8_t)strtol(&CommandBuffer[11],NULL,10);
+          Buffer.remove(0,12);
+          Type = (uint8_t)Buffer.toInt();
           TrackerConfiguration->SetAddressType(Type);
           ConfigurationReport();
         }         
-        else if(strstr(CommandBuffer,"AIRCRAFTTYPE "))
+        else if(Buffer.startsWith("AIRCRAFTTYPE "))
         {
-          Type = (uint8_t)strtol(&CommandBuffer[12],NULL,10);
-          Serial.println(Type,DEC);
+          Buffer.remove(0,13);
+          Type = (uint8_t)Buffer.toInt();
           TrackerConfiguration->SetAircraftType(Type);
+          ConfigurationReport();
+        }
+        else if(Buffer.startsWith("POWER "))
+        {
+          Buffer.remove(0,6);
+          Power = (uint8_t)Buffer.toInt();
+          TrackerConfiguration->SetTxPower(Power);
           ConfigurationReport();
         }         
 
-        //else if...
-        BufferUsed = 0;
+        Buffer = "";
       }
       else
       {
-         BufferUsed ++;
+         Buffer = Buffer + (char)Byte;
       }
     }
     else
     {
-      BufferUsed = 0;
+      Buffer = "";
     }  
   }
 } 
+
 
 

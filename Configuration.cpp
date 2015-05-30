@@ -15,12 +15,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+ 
 #include "Configuration.h"
 #include "NVStore.h"
 #include <arduino.h>
 
-#define STOREVERSION 0x0002
 
 Configuration::Configuration(void)
 {
@@ -37,7 +36,6 @@ void Configuration::LoadConfiguration(uint32_t TempAddress )
   
   if(temp.StoreVersion != STOREVERSION)
   {
-    Serial.println("EE OK");
     cs.Address = TempAddress;
     cs.AddressType = ADDRESS_TYPE_OGN ;
     cs.AircraftType = AIRCRAFT_TYPE_UNKNOWN;
@@ -46,6 +44,9 @@ void Configuration::LoadConfiguration(uint32_t TempAddress )
     cs.GPSBaud = 9600;
     cs.DataInPin = 4;
     cs.DataOutPin = 5;
+    cs.TxPower = 14;
+    cs.NMEAOut = 1;
+    cs.NMEADelay = 60;
   } 
   else
   {
@@ -113,6 +114,16 @@ void Configuration::SetDataOutPin(uint8_t Pin)
   cs.DataOutPin = Pin;
 }
 
+uint8_t Configuration::GetTxPower(void)
+{
+  return cs.TxPower;
+}
+
+void Configuration::SetTxPower(uint8_t Power)
+{
+  cs.TxPower = Power;
+}
+
 
 void Configuration::WriteConfiguration(void)
 {
@@ -145,4 +156,23 @@ void Configuration::SetGPSBaud(uint32_t GPSBaud)
 }
 
 
+uint8_t Configuration::GetNMEAOut(void)
+{
+  return cs.NMEAOut;
+}
 
+void Configuration::SetNMEAOut(uint8_t Out)
+{
+  cs.NMEAOut = Out;
+}
+    
+uint32_t Configuration::GetNMEADelay(void)
+{
+  return cs.NMEADelay;
+}
+
+void Configuration::SetNMEADelay(uint32_t Delay)
+{
+  cs.NMEADelay = Delay;
+}
+    

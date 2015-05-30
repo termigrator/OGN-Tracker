@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+ 
 #ifndef CONFIGURATION_h
 #define CONFIGURATION_h
 
@@ -42,6 +42,7 @@
 #define AIRCRAFT_TYPE_UAV 13
 #define AIRCRAFT_TYPE_STATIC_OBJECT 15
 
+#define STOREVERSION 0x0003
 struct Configuration_Struct
 {
   uint16_t StoreVersion;
@@ -53,6 +54,9 @@ struct Configuration_Struct
   uint32_t GPSBaud;
   uint8_t AddressType; 
   uint8_t AircraftType;
+  uint8_t TxPower;
+  uint8_t NMEAOut;
+  uint32_t NMEADelay;
 };   
 
 /////////////////////////////////////////////////////////////////////
@@ -62,8 +66,6 @@ class Configuration
     Configuration();
     void LoadConfiguration(uint32_t TempAddress = 0xBADADD);
     void WriteConfiguration(void);
-    void Report(void);
-    void ProcessSerial(void);
     
     uint32_t GetAddress(void); 
     void SetAddress(uint32_t Address); 
@@ -88,6 +90,16 @@ class Configuration
       
     uint8_t GetDataOutPin(void);
     void SetDataOutPin(uint8_t Pin);
+
+    uint8_t GetTxPower(void);
+    void SetTxPower(uint8_t Power);
+    
+    uint8_t GetNMEAOut(void);
+    void SetNMEAOut(uint8_t Out);
+    
+    uint32_t GetNMEADelay(void);
+    void SetNMEADelay(uint32_t Delay);
+    
       
   protected:
 				

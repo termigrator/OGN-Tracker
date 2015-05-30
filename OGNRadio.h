@@ -32,8 +32,13 @@ class OGNRadio
 {
   public:
     OGNRadio(void);
-    void Initialise(void);
+    void Initialise(uint8_t Power);
     void SendPacket(uint8_t *Packet, uint16_t Size, uint16_t freq);
+    void SetTxPower(uint8_t Power);
+    
+    void StartRecieve(void);
+    void CheckRecieve(void);
+    void EndRecieve(void);
       
   protected:
 				
