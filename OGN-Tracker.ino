@@ -45,7 +45,7 @@ uint32_t ClimbAverageTime = 0;
 #define CLIMBAVERAGE 30000
 
 #define NMEAOUTDELAY 60000
-
+#define LEDPORTGPSREADY 9
 void setup() 
 {
   TrackerConfiguration = new Configuration();
@@ -57,6 +57,7 @@ void setup()
   GPS = new OGNGPS(TrackerConfiguration->GetDataInPin(),TrackerConfiguration->GetDataOutPin());
   Radio = new OGNRadio(); 
   Radio->Initialise(TrackerConfiguration->GetTxPower());
+  pinMode(LEDPORTGPSREADY,OUTPUT);
 }
 
 void loop() 
@@ -72,6 +73,7 @@ void loop()
   {
     if(GPS->location.isValid())
     {
+      digitalWrite(LEDPORTGPSREADY, HIGH);
       ReportTime = TimeNow;
       
       if(RecieveActive)
@@ -93,6 +95,10 @@ void loop()
       
       Radio->StartRecieve(); RecieveActive = true;       
     }
+    else
+    {
+      digitalWrite(LEDPORTGPSREADY,LOW);
+      }
   }
   
 
